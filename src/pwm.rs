@@ -6,6 +6,24 @@ use crate::rcc::Rcc;
 use crate::time::Hertz;
 use embedded_hal as hal;
 
+/// The dead time interval for a given pwm timer
+pub enum DTInterval {
+    DT_0 = 0,
+    DT_1 = 1,
+    DT_2 = 2,
+    DT_3 = 3,
+    DT_4 = 4,
+    DT_5 = 5,
+    DT_6 = 6,
+    DT_7 = 7,
+}
+
+/// Trait for complementary PWM pins that allows the setting of dead time
+pub trait ComplementaryPwm {
+    /// Set the dead time for the pwm timer (not the specific pin)
+    fn set_dead_time(&mut self, duration: DTInterval);
+}
+
 pub trait Pins<TIM, P> {
     const C1: bool = false;
     const C1N: bool = false;
@@ -409,6 +427,13 @@ macro_rules! pwm_4_channels_with_3_complementary_outputs {
                 }
             }
 
+            impl ComplementaryPwm for PwmChannels<$TIMX, C1> {
+                //NOTE(unsafe) atomic write with no side effects
+                fn set_dead_time(&mut self, duration: DTInterval) {
+                    unsafe { (*($TIMX::ptr())).bdtr.modify(|_, w| w.dtg().bits(duration as u8)) };
+                }
+            }
+
             impl hal::PwmPin for PwmChannels<$TIMX, C1N> {
                 type Duty = u16;
 
@@ -435,6 +460,13 @@ macro_rules! pwm_4_channels_with_3_complementary_outputs {
                 //NOTE(unsafe) atomic write with no side effects
                 fn set_duty(&mut self, duty: u16) {
                     unsafe { (*$TIMX::ptr()).ccr1().write(|w| w.ccr().bits(duty.into())) }
+                }
+            }
+
+            impl ComplementaryPwm for PwmChannels<$TIMX, C1N> {
+                //NOTE(unsafe) atomic write with no side effects
+                fn set_dead_time(&mut self, duration: DTInterval) {
+                    unsafe { (*($TIMX::ptr())).bdtr.modify(|_, w| w.dtg().bits(duration as u8)) };
                 }
             }
 
@@ -467,6 +499,13 @@ macro_rules! pwm_4_channels_with_3_complementary_outputs {
                 }
             }
 
+            impl ComplementaryPwm for PwmChannels<$TIMX, C2> {
+                //NOTE(unsafe) atomic write with no side effects
+                fn set_dead_time(&mut self, duration: DTInterval) {
+                    unsafe { (*($TIMX::ptr())).bdtr.modify(|_, w| w.dtg().bits(duration as u8)) };
+                }
+            }
+
             impl hal::PwmPin for PwmChannels<$TIMX, C2N> {
                 type Duty = u16;
 
@@ -493,6 +532,13 @@ macro_rules! pwm_4_channels_with_3_complementary_outputs {
                 //NOTE(unsafe) atomic write with no side effects
                 fn set_duty(&mut self, duty: u16) {
                     unsafe { (*$TIMX::ptr()).ccr2().write(|w| w.ccr().bits(duty.into())) }
+                }
+            }
+
+            impl ComplementaryPwm for PwmChannels<$TIMX, C2N> {
+                //NOTE(unsafe) atomic write with no side effects
+                fn set_dead_time(&mut self, duration: DTInterval) {
+                    unsafe { (*($TIMX::ptr())).bdtr.modify(|_, w| w.dtg().bits(duration as u8)) };
                 }
             }
 
@@ -525,6 +571,13 @@ macro_rules! pwm_4_channels_with_3_complementary_outputs {
                 }
             }
 
+            impl ComplementaryPwm for PwmChannels<$TIMX, C3> {
+                //NOTE(unsafe) atomic write with no side effects
+                fn set_dead_time(&mut self, duration: DTInterval) {
+                    unsafe { (*($TIMX::ptr())).bdtr.modify(|_, w| w.dtg().bits(duration as u8)) };
+                }
+            }
+
             impl hal::PwmPin for PwmChannels<$TIMX, C3N> {
                 type Duty = u16;
 
@@ -551,6 +604,13 @@ macro_rules! pwm_4_channels_with_3_complementary_outputs {
                 //NOTE(unsafe) atomic write with no side effects
                 fn set_duty(&mut self, duty: u16) {
                     unsafe { (*$TIMX::ptr()).ccr3().write(|w| w.ccr().bits(duty.into())) }
+                }
+            }
+
+            impl ComplementaryPwm for PwmChannels<$TIMX, C3N> {
+                //NOTE(unsafe) atomic write with no side effects
+                fn set_dead_time(&mut self, duration: DTInterval) {
+                    unsafe { (*($TIMX::ptr())).bdtr.modify(|_, w| w.dtg().bits(duration as u8)) };
                 }
             }
 
@@ -872,6 +932,13 @@ macro_rules! pwm_1_channel_with_complementary_outputs {
                 }
             }
 
+            impl ComplementaryPwm for PwmChannels<$TIMX, C1> {
+                //NOTE(unsafe) atomic write with no side effects
+                fn set_dead_time(&mut self, duration: DTInterval) {
+                    unsafe { (*($TIMX::ptr())).bdtr.modify(|_, w| w.dtg().bits(duration as u8)) };
+                }
+            }
+
             impl hal::PwmPin for PwmChannels<$TIMX, C1N> {
                 type Duty = u16;
 
@@ -898,6 +965,13 @@ macro_rules! pwm_1_channel_with_complementary_outputs {
                 //NOTE(unsafe) atomic write with no side effects
                 fn set_duty(&mut self, duty: u16) {
                     unsafe { (*$TIMX::ptr()).ccr1().write(|w| w.ccr().bits(duty.into())) }
+                }
+            }
+
+            impl ComplementaryPwm for PwmChannels<$TIMX, C1N> {
+                //NOTE(unsafe) atomic write with no side effects
+                fn set_dead_time(&mut self, duration: DTInterval) {
+                    unsafe { (*($TIMX::ptr())).bdtr.modify(|_, w| w.dtg().bits(duration as u8)) };
                 }
             }
         )+
