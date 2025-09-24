@@ -8,14 +8,11 @@ use embedded_hal as hal;
 
 /// The dead time interval for a given pwm timer
 pub enum DTInterval {
-    DT_0 = 0,
-    DT_1 = 1,
-    DT_2 = 2,
-    DT_3 = 3,
-    DT_4 = 4,
-    DT_5 = 5,
-    DT_6 = 6,
-    DT_7 = 7,
+    //All of the below are approximate values based on real measurements
+    //at a 12kHz PWM clock
+    DT_0_5US = 0b1000011, 
+    DT_0_7US = 0b1000100,
+    DT_1_0US = 0b1001000,
 }
 
 /// Trait for complementary PWM pins that allows the setting of dead time
