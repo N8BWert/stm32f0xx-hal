@@ -10,7 +10,7 @@ use embedded_hal as hal;
 pub enum DTInterval {
     //All of the below are approximate values based on real measurements
     //at a 12kHz PWM clock
-    DT_0_5US = 0b1000011, 
+    DT_0_5US = 0b1000011,
     DT_0_7US = 0b1000100,
     DT_1_0US = 0b1001000,
 }
