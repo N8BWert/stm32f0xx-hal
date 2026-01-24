@@ -485,7 +485,7 @@ macro_rules! gpio {
                                     w.bits(r.bits() & !(0b1 << $i))
                                 });
                                 reg.ospeedr.modify(|r, w| {
-                                    w.bits(r.bits() & !(0b1 << $i))
+                                    w.bits(r.bits() | (0b11 << offset))
                                 });
                                 reg.moder.modify(|r, w| {
                                     w.bits((r.bits() & !(0b11 << offset)) | (0b01 << offset))
