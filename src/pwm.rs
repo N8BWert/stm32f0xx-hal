@@ -6,22 +6,10 @@ use crate::rcc::Rcc;
 use crate::time::Hertz;
 use embedded_hal as hal;
 
-/// The dead time interval for a given pwm timer
-pub enum DTInterval {
-    DT_0 = 0,
-    DT_1 = 1,
-    DT_2 = 2,
-    DT_3 = 3,
-    DT_4 = 4,
-    DT_5 = 5,
-    DT_6 = 6,
-    DT_7 = 7,
-}
-
 /// Trait for complementary PWM pins that allows the setting of dead time
 pub trait ComplementaryPwm {
-    /// Set the dead time for the pwm timer (not the specific pin)
-    fn set_dead_time(&mut self, duration: DTInterval);
+    /// Set the dead time for the pwm timer in us (not the specific pin)
+    fn set_dead_time(&mut self, rcc: &mut Rcc, duration: u32);
 }
 
 pub trait Pins<TIM, P> {
@@ -429,8 +417,22 @@ macro_rules! pwm_4_channels_with_3_complementary_outputs {
 
             impl ComplementaryPwm for PwmChannels<$TIMX, C1> {
                 //NOTE(unsafe) atomic write with no side effects
-                fn set_dead_time(&mut self, duration: DTInterval) {
-                    unsafe { (*($TIMX::ptr())).bdtr.modify(|_, w| w.dtg().bits(duration as u8)) };
+                fn set_dead_time(&mut self, rcc: &mut Rcc, duration: u32) {
+                    // Convert frequency to period in ns
+                    let period = if rcc.clocks.hclk().0 == rcc.clocks.pclk().0 {
+                        1000000000 / rcc.clocks.pclk().0
+                    } else {
+                        1000000000 / rcc.clocks.pclk().0 * 2
+                    };
+                    let t = duration / period;
+                    let dtg = match t {
+                        0..=127 => t,
+                        128..=255 => t / 2 - 64 + 0b1000_0000,
+                        256..=504 => t / 8  - 32 + 0b1100_0000,
+                        512..=1008 => t / 16 - 32 + 0b1110_0000,
+                        _ => 0,
+                    };
+                    unsafe { (*($TIMX::ptr())).bdtr.modify(|_, w| w.dtg().bits(dtg as u8)) };
                 }
             }
 
@@ -465,8 +467,26 @@ macro_rules! pwm_4_channels_with_3_complementary_outputs {
 
             impl ComplementaryPwm for PwmChannels<$TIMX, C1N> {
                 //NOTE(unsafe) atomic write with no side effects
-                fn set_dead_time(&mut self, duration: DTInterval) {
-                    unsafe { (*($TIMX::ptr())).bdtr.modify(|_, w| w.dtg().bits(duration as u8)) };
+                fn set_dead_time(&mut self, rcc: &mut Rcc, duration: u32) {
+                    let tclk = if rcc.clocks.hclk().0 == rcc.clocks.pclk().0 {
+                        1000000000 / rcc.clocks.pclk().0
+                    } else {
+                        1000000000 / rcc.clocks.pclk().0 * 2
+                    };
+                    let t = duration / tclk;
+                    let dtg = match t {
+                        0..=127 => t,
+                        128..=255 => t / 2 - 64 + 0b1000_0000,
+                        256..=504 => t / 8  - 32 + 0b1100_0000,
+                        512..=1008 => t / 16 - 32 + 0b1110_0000,
+                        _ => 0,
+                    };
+                    
+                    unsafe { (*($TIMX::ptr())).bdtr.modify(|_, w| w.dtg().bits(dtg as u8)) };
+                }
+
+                fn calc_dead_time(&mut self) -> u8 {
+                    unsafe { (*($TIMX::ptr())).bdtr.read().dtg().bits() as u8 }
                 }
             }
 
@@ -501,8 +521,26 @@ macro_rules! pwm_4_channels_with_3_complementary_outputs {
 
             impl ComplementaryPwm for PwmChannels<$TIMX, C2> {
                 //NOTE(unsafe) atomic write with no side effects
-                fn set_dead_time(&mut self, duration: DTInterval) {
-                    unsafe { (*($TIMX::ptr())).bdtr.modify(|_, w| w.dtg().bits(duration as u8)) };
+                fn set_dead_time(&mut self, rcc: &mut Rcc, duration: u32) {
+                    let tclk = if rcc.clocks.hclk().0 == rcc.clocks.pclk().0 {
+                        1000000000 / rcc.clocks.pclk().0
+                    } else {
+                        1000000000 / rcc.clocks.pclk().0 * 2
+                    };
+                    let t = duration / tclk;
+                    let dtg = match t {
+                        0..=127 => t,
+                        128..=255 => t / 2 - 64 + 0b1000_0000,
+                        256..=504 => t / 8  - 32 + 0b1100_0000,
+                        512..=1008 => t / 16 - 32 + 0b1110_0000,
+                        _ => 0,
+                    };
+                    
+                    unsafe { (*($TIMX::ptr())).bdtr.modify(|_, w| w.dtg().bits(dtg as u8)) };
+                }
+
+                fn calc_dead_time(&mut self) -> u8 {
+                    unsafe { (*($TIMX::ptr())).bdtr.read().dtg().bits() as u8 }
                 }
             }
 
@@ -537,8 +575,26 @@ macro_rules! pwm_4_channels_with_3_complementary_outputs {
 
             impl ComplementaryPwm for PwmChannels<$TIMX, C2N> {
                 //NOTE(unsafe) atomic write with no side effects
-                fn set_dead_time(&mut self, duration: DTInterval) {
-                    unsafe { (*($TIMX::ptr())).bdtr.modify(|_, w| w.dtg().bits(duration as u8)) };
+                fn set_dead_time(&mut self, rcc: &mut Rcc, duration: u32) {
+                    let tclk = if rcc.clocks.hclk().0 == rcc.clocks.pclk().0 {
+                        1000000000 / rcc.clocks.pclk().0
+                    } else {
+                        1000000000 / rcc.clocks.pclk().0 * 2
+                    };
+                    let t = duration / tclk;
+                    let dtg = match t {
+                        0..=127 => t,
+                        128..=255 => t / 2 - 64 + 0b1000_0000,
+                        256..=504 => t / 8  - 32 + 0b1100_0000,
+                        512..=1008 => t / 16 - 32 + 0b1110_0000,
+                        _ => 0,
+                    };
+                    
+                    unsafe { (*($TIMX::ptr())).bdtr.modify(|_, w| w.dtg().bits(dtg as u8)) };
+                }
+
+                fn calc_dead_time(&mut self) -> u8 {
+                    unsafe { (*($TIMX::ptr())).bdtr.read().dtg().bits() as u8 }
                 }
             }
 
@@ -573,8 +629,26 @@ macro_rules! pwm_4_channels_with_3_complementary_outputs {
 
             impl ComplementaryPwm for PwmChannels<$TIMX, C3> {
                 //NOTE(unsafe) atomic write with no side effects
-                fn set_dead_time(&mut self, duration: DTInterval) {
-                    unsafe { (*($TIMX::ptr())).bdtr.modify(|_, w| w.dtg().bits(duration as u8)) };
+                fn set_dead_time(&mut self, rcc: &mut Rcc, duration: u32) {
+                    let tclk = if rcc.clocks.hclk().0 == rcc.clocks.pclk().0 {
+                        1000000000 / rcc.clocks.pclk().0
+                    } else {
+                        1000000000 / rcc.clocks.pclk().0 * 2
+                    };
+                    let t = duration / tclk;
+                    let dtg = match t {
+                        0..=127 => t,
+                        128..=255 => t / 2 - 64 + 0b1000_0000,
+                        256..=504 => t / 8  - 32 + 0b1100_0000,
+                        512..=1008 => t / 16 - 32 + 0b1110_0000,
+                        _ => 0,
+                    };
+                    
+                    unsafe { (*($TIMX::ptr())).bdtr.modify(|_, w| w.dtg().bits(dtg as u8)) };
+                }
+
+                fn calc_dead_time(&mut self) -> u8 {
+                    unsafe { (*($TIMX::ptr())).bdtr.read().dtg().bits() as u8 }
                 }
             }
 
@@ -609,8 +683,26 @@ macro_rules! pwm_4_channels_with_3_complementary_outputs {
 
             impl ComplementaryPwm for PwmChannels<$TIMX, C3N> {
                 //NOTE(unsafe) atomic write with no side effects
-                fn set_dead_time(&mut self, duration: DTInterval) {
-                    unsafe { (*($TIMX::ptr())).bdtr.modify(|_, w| w.dtg().bits(duration as u8)) };
+                fn set_dead_time(&mut self, rcc: &mut Rcc, duration: u32) {
+                    let tclk = if rcc.clocks.hclk().0 == rcc.clocks.pclk().0 {
+                        1000000000 / rcc.clocks.pclk().0
+                    } else {
+                        1000000000 / rcc.clocks.pclk().0 * 2
+                    };
+                    let t = duration / tclk;
+                    let dtg = match t {
+                        0..=127 => t,
+                        128..=255 => t / 2 - 64 + 0b1000_0000,
+                        256..=504 => t / 8  - 32 + 0b1100_0000,
+                        512..=1008 => t / 16 - 32 + 0b1110_0000,
+                        _ => 0,
+                    };
+                    
+                    unsafe { (*($TIMX::ptr())).bdtr.modify(|_, w| w.dtg().bits(dtg as u8)) };
+                }
+
+                fn calc_dead_time(&mut self) -> u8 {
+                    unsafe { (*($TIMX::ptr())).bdtr.read().dtg().bits() as u8 }
                 }
             }
 
@@ -934,8 +1026,26 @@ macro_rules! pwm_1_channel_with_complementary_outputs {
 
             impl ComplementaryPwm for PwmChannels<$TIMX, C1> {
                 //NOTE(unsafe) atomic write with no side effects
-                fn set_dead_time(&mut self, duration: DTInterval) {
-                    unsafe { (*($TIMX::ptr())).bdtr.modify(|_, w| w.dtg().bits(duration as u8)) };
+                fn set_dead_time(&mut self, rcc: &mut Rcc, duration: u32) {
+                    let tclk = if rcc.clocks.hclk().0 == rcc.clocks.pclk().0 {
+                        1000000000 / rcc.clocks.pclk().0
+                    } else {
+                        1000000000 / rcc.clocks.pclk().0 * 2
+                    };
+                    let t = duration / tclk;
+                    let dtg = match t {
+                        0..=127 => t,
+                        128..=255 => t / 2 - 64 + 0b1000_0000,
+                        256..=504 => t / 8  - 32 + 0b1100_0000,
+                        512..=1008 => t / 16 - 32 + 0b1110_0000,
+                        _ => 0,
+                    };
+                    
+                    unsafe { (*($TIMX::ptr())).bdtr.modify(|_, w| w.dtg().bits(dtg as u8)) };
+                }
+
+                fn calc_dead_time(&mut self) -> u8 {
+                    unsafe { (*($TIMX::ptr())).bdtr.read().dtg().bits() as u8 }
                 }
             }
 
@@ -970,8 +1080,26 @@ macro_rules! pwm_1_channel_with_complementary_outputs {
 
             impl ComplementaryPwm for PwmChannels<$TIMX, C1N> {
                 //NOTE(unsafe) atomic write with no side effects
-                fn set_dead_time(&mut self, duration: DTInterval) {
-                    unsafe { (*($TIMX::ptr())).bdtr.modify(|_, w| w.dtg().bits(duration as u8)) };
+                fn set_dead_time(&mut self, rcc: &mut Rcc, duration: u32) {
+                    let tclk = if rcc.clocks.hclk().0 == rcc.clocks.pclk().0 {
+                        1000000000 / rcc.clocks.pclk().0
+                    } else {
+                        1000000000 / rcc.clocks.pclk().0 * 2
+                    };
+                    let t = duration / tclk;
+                    let dtg = match t {
+                        0..=127 => t,
+                        128..=255 => t / 2 - 64 + 0b1000_0000,
+                        256..=504 => t / 8  - 32 + 0b1100_0000,
+                        512..=1008 => t / 16 - 32 + 0b1110_0000,
+                        _ => 0,
+                    };
+                    
+                    unsafe { (*($TIMX::ptr())).bdtr.modify(|_, w| w.dtg().bits(dtg as u8)) };
+                }
+
+                fn calc_dead_time(&mut self) -> u8 {
+                    unsafe { (*($TIMX::ptr())).bdtr.read().dtg().bits() as u8 }
                 }
             }
         )+
