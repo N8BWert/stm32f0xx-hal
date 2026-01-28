@@ -8,7 +8,7 @@ use embedded_hal as hal;
 
 /// Trait for complementary PWM pins that allows the setting of dead time
 pub trait ComplementaryPwm {
-    /// Set the dead time for the pwm timer in us (not the specific pin)
+    /// Set the dead time for the pwm timer in ns (not the specific pin)
     fn set_dead_time(&mut self, rcc: &mut Rcc, duration: u32);
 }
 
