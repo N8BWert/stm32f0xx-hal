@@ -144,6 +144,55 @@ impl<MODE> InputPin for Pin<Input<MODE>> {
     }
 }
 
+impl<MODE> embedded_hal_1::digital::ErrorType for Pin<MODE> {
+    type Error = Infallible;
+}
+
+impl<MODE> embedded_hal_1::digital::InputPin for Pin<MODE>
+where
+    Pin<MODE>: InputPin<Error = Infallible>,
+{
+    #[inline(always)]
+    fn is_high(&mut self) -> Result<bool, Self::Error> {
+        InputPin::is_high(self)
+    }
+
+    #[inline(always)]
+    fn is_low(&mut self) -> Result<bool, Self::Error> {
+        InputPin::is_low(self)
+    }
+}
+
+impl<MODE> embedded_hal_1::digital::OutputPin for Pin<MODE>
+where
+    Pin<MODE>: OutputPin<Error = Infallible>,
+{
+    #[inline(always)]
+    fn set_high(&mut self) -> Result<(), Self::Error> {
+        OutputPin::set_high(self)
+    }
+
+    #[inline(always)]
+    fn set_low(&mut self) -> Result<(), Self::Error> {
+        OutputPin::set_low(self)
+    }
+}
+
+impl<MODE> embedded_hal_1::digital::StatefulOutputPin for Pin<MODE>
+where
+    Pin<MODE>: StatefulOutputPin<Error = Infallible>,
+{
+    #[inline(always)]
+    fn is_set_high(&mut self) -> Result<bool, Self::Error> {
+        StatefulOutputPin::is_set_high(self)
+    }
+
+    #[inline(always)]
+    fn is_set_low(&mut self) -> Result<bool, Self::Error> {
+        StatefulOutputPin::is_set_low(self)
+    }
+}
+
 macro_rules! gpio_trait {
     ($gpiox:ident) => {
         impl GpioRegExt for crate::pac::$gpiox::RegisterBlock {
@@ -436,7 +485,7 @@ macro_rules! gpio {
                                     w.bits(r.bits() & !(0b1 << $i))
                                 });
                                 reg.ospeedr.modify(|r, w| {
-                                    w.bits(r.bits() & !(0b1 << $i))
+                                    w.bits(r.bits() | (0b11 << offset))
                                 });
                                 reg.moder.modify(|r, w| {
                                     w.bits((r.bits() & !(0b11 << offset)) | (0b01 << offset))
@@ -562,6 +611,46 @@ macro_rules! gpio {
 
                         fn is_low(&self) -> Result<bool, Self::Error> {
                             Ok(unsafe { (*$GPIOX::ptr()).is_low($i) })
+                        }
+                    }
+
+                    impl<MODE> embedded_hal_1::digital::ErrorType for $PXi<MODE>{
+                        type Error = Infallible;
+                    }
+
+                    impl<MODE> embedded_hal_1::digital::InputPin for $PXi<MODE> where $PXi<MODE>: InputPin<Error=Infallible> {
+                        #[inline(always)]
+                        fn is_high(&mut self) -> Result<bool, Self::Error> {
+                            InputPin::is_high(self)
+                        }
+
+                        #[inline(always)]
+                        fn is_low(&mut self) -> Result<bool, Self::Error> {
+                            InputPin::is_low(self)
+                        }
+                    }
+
+                    impl<MODE> embedded_hal_1::digital::OutputPin for $PXi<MODE> where $PXi<MODE>: OutputPin<Error=Infallible> {
+                        #[inline(always)]
+                        fn set_high(&mut self) -> Result<(), Self::Error> {
+                            OutputPin::set_high(self)
+                        }
+
+                        #[inline(always)]
+                        fn set_low(&mut self) -> Result<(), Self::Error> {
+                            OutputPin::set_low(self)
+                        }
+                    }
+
+                    impl<MODE> embedded_hal_1::digital::StatefulOutputPin for $PXi<MODE> where $PXi<MODE>: StatefulOutputPin<Error=Infallible> {
+                        #[inline(always)]
+                        fn is_set_high(&mut self) -> Result<bool, Self::Error> {
+                            StatefulOutputPin::is_set_high(self)
+                        }
+
+                        #[inline(always)]
+                        fn is_set_low(&mut self) -> Result<bool, Self::Error> {
+                            StatefulOutputPin::is_set_low(self)
                         }
                     }
                 )+

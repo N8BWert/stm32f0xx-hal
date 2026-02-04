@@ -20,6 +20,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - PWM complementary output capability for TIM1 with new example to demonstrate
 - Implement interface for reading and writing to the internal flash memory and an example for demonstration.
 - PWM output on complementary channels only for single channel timers (TIM16 + TIM17)
+- impl embedded_hal_1::spi::SpiBus for SPI
+- impl embedded_hal_1::digital traits for Pins
+- Enable AF1 on GPIOE for pins [13, 14, 15] to support SPI communication
 
 ### Fixed
 
@@ -28,6 +31,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `invalid_reference_casting` Compilation error in spi.rs for Rust version 1.73+ (
   See [PR#112431](https://github.com/rust-lang/rust/pull/112431) for more info)
 - `unused_doc_comments` Warning in rcc.rs
+- Fixed incorrect OSPEEDR assignment for high-speed push-pull output
 - Fixed some warnings #177
 
 ## [v0.18.0] - 2021-11-14
