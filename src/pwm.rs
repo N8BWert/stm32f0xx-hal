@@ -484,10 +484,6 @@ macro_rules! pwm_4_channels_with_3_complementary_outputs {
 
                     unsafe { (*($TIMX::ptr())).bdtr.modify(|_, w| w.dtg().bits(dtg as u8)) };
                 }
-
-                fn calc_dead_time(&mut self) -> u8 {
-                    unsafe { (*($TIMX::ptr())).bdtr.read().dtg().bits() as u8 }
-                }
             }
 
             impl hal::PwmPin for PwmChannels<$TIMX, C2> {
@@ -537,10 +533,6 @@ macro_rules! pwm_4_channels_with_3_complementary_outputs {
                     };
 
                     unsafe { (*($TIMX::ptr())).bdtr.modify(|_, w| w.dtg().bits(dtg as u8)) };
-                }
-
-                fn calc_dead_time(&mut self) -> u8 {
-                    unsafe { (*($TIMX::ptr())).bdtr.read().dtg().bits() as u8 }
                 }
             }
 
@@ -592,10 +584,6 @@ macro_rules! pwm_4_channels_with_3_complementary_outputs {
 
                     unsafe { (*($TIMX::ptr())).bdtr.modify(|_, w| w.dtg().bits(dtg as u8)) };
                 }
-
-                fn calc_dead_time(&mut self) -> u8 {
-                    unsafe { (*($TIMX::ptr())).bdtr.read().dtg().bits() as u8 }
-                }
             }
 
             impl hal::PwmPin for PwmChannels<$TIMX, C3> {
@@ -646,10 +634,6 @@ macro_rules! pwm_4_channels_with_3_complementary_outputs {
 
                     unsafe { (*($TIMX::ptr())).bdtr.modify(|_, w| w.dtg().bits(dtg as u8)) };
                 }
-
-                fn calc_dead_time(&mut self) -> u8 {
-                    unsafe { (*($TIMX::ptr())).bdtr.read().dtg().bits() as u8 }
-                }
             }
 
             impl hal::PwmPin for PwmChannels<$TIMX, C3N> {
@@ -699,10 +683,6 @@ macro_rules! pwm_4_channels_with_3_complementary_outputs {
                     };
 
                     unsafe { (*($TIMX::ptr())).bdtr.modify(|_, w| w.dtg().bits(dtg as u8)) };
-                }
-
-                fn calc_dead_time(&mut self) -> u8 {
-                    unsafe { (*($TIMX::ptr())).bdtr.read().dtg().bits() as u8 }
                 }
             }
 
